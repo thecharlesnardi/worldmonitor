@@ -18,6 +18,8 @@ npm run nexus:sync-sources
 npm run nexus:sync-chunks -- --write-citations
 # optional embeddings
 npm run nexus:sync-chunks -- --with-embeddings --write-citations
+# strict mode (fails if embeddings cannot be generated)
+npm run nexus:sync-chunks -- --with-embeddings --require-embeddings --write-citations
 ```
 
 ## Phase 4/5 - Ask + Security

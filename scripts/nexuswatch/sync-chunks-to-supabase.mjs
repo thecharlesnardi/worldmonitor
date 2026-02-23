@@ -4,11 +4,30 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const root = process.cwd();
-const inputPath = path.resolve(root, process.argv[2] || 'data/nexuswatch/processed/chunks.jsonl');
-const withEmbeddings = process.argv.includes('--with-embeddings');
-const writeCitations = process.argv.includes('--write-citations');
-const maxRowsArgIndex = process.argv.indexOf('--max-rows');
-const maxRows = maxRowsArgIndex > -1 ? Number(process.argv[maxRowsArgIndex + 1]) : Infinity;
+const args = process.argv.slice(2);
+
+function argValue(flag, fallback = null) {
+  const index = args.indexOf(flag);
+  if (index === -1) return fallback;
+  const value = args[index + 1];
+  if (!value || value.startsWith('--')) return fallback;
+  return value;
+}
+
+function findInputPath() {
+  for (const arg of args) {
+    if (arg.startsWith('--')) continue;
+    return arg;
+  }
+  return 'data/nexuswatch/processed/chunks.jsonl';
+}
+
+const inputPath = path.resolve(root, findInputPath());
+const withEmbeddings = args.includes('--with-embeddings');
+const writeCitations = args.includes('--write-citations');
+const requireEmbeddings = args.includes('--require-embeddings');
+const maxRows = Number(argValue('--max-rows', 'Infinity'));
+const embeddingProvider = (argValue('--embedding-provider', 'openai') || 'openai').toLowerCase();
 
 const supabaseUrl = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
 const serviceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
@@ -25,9 +44,24 @@ if (!fs.existsSync(inputPath)) {
   process.exit(1);
 }
 
-if (withEmbeddings && !openAiApiKey) {
-  console.error('[nexuswatch] --with-embeddings requires OPENAI_API_KEY');
+if (withEmbeddings && embeddingProvider !== 'openai') {
+  console.error(`[nexuswatch] unsupported embedding provider: ${embeddingProvider} (supported: openai)`);
   process.exit(1);
+}
+
+const embeddingsEnabled = withEmbeddings && Boolean(openAiApiKey) && embeddingProvider === 'openai';
+const embeddingsSkipReason = withEmbeddings && !embeddingsEnabled
+  ? 'OPENAI_API_KEY missing or provider unavailable'
+  : null;
+
+if (withEmbeddings && !embeddingsEnabled && requireEmbeddings) {
+  console.error('[nexuswatch] embeddings were explicitly required but OPENAI_API_KEY is missing.');
+  process.exit(1);
+}
+
+if (withEmbeddings && !embeddingsEnabled && !requireEmbeddings) {
+  console.warn('[nexuswatch] --with-embeddings requested, but OPENAI_API_KEY is missing. Continuing without embeddings.');
+  console.warn('[nexuswatch] use --require-embeddings to fail fast when embeddings cannot be generated.');
 }
 
 async function request(pathname, { method = 'GET', body, query, prefer = 'return=representation' } = {}) {
@@ -61,6 +95,8 @@ async function request(pathname, { method = 'GET', body, query, prefer = 'return
 }
 
 async function embed(text) {
+  if (!embeddingsEnabled) return null;
+
   const response = await fetch('https://api.openai.com/v1/embeddings', {
     method: 'POST',
     headers: {
@@ -188,7 +224,7 @@ for (const row of chunkRows) {
     insertedCitations += 1;
   }
 
-  if (withEmbeddings) {
+  if (embeddingsEnabled) {
     const vector = await embed(row.text_content);
     if (Array.isArray(vector) && vector.length > 0) {
       await request('embeddings', {
@@ -216,6 +252,11 @@ console.log(JSON.stringify({
   inserted_citations: insertedCitations,
   inserted_embeddings: insertedEmbeddings,
   skipped,
+  embeddings_requested: withEmbeddings,
+  embeddings_enabled: embeddingsEnabled,
+  embeddings_skipped_reason: embeddingsSkipReason,
+  embedding_provider: embeddingProvider,
+  embedding_model: embeddingsEnabled ? embeddingModel : null,
   with_embeddings: withEmbeddings,
   write_citations: writeCitations,
 }, null, 2));

@@ -32,7 +32,9 @@
 - `npm run nexus:sync-chunks -- --write-citations`
   - Upserts documents/chunks and optional citation rows.
 - `npm run nexus:sync-chunks -- --with-embeddings --write-citations`
-  - Adds pgvector embeddings using `OPENAI_API_KEY`.
+  - Attempts pgvector embeddings.
+  - If `OPENAI_API_KEY` is missing, ingestion continues without embeddings by default.
+  - Add `--require-embeddings` to fail-fast when embedding generation is mandatory.
 
 ## API Wiring Completed
 - `/api/ask-globe` now:
