@@ -1,4 +1,5 @@
 const DEFAULT_REMOTE_HOSTS: Record<string, string> = {
+  nexus: 'https://worldmonitor.app',
   tech: 'https://tech.worldmonitor.app',
   full: 'https://worldmonitor.app',
   world: 'https://worldmonitor.app',

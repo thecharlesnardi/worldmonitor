@@ -1,0 +1,16 @@
+version: '3.9'
+services:
+  nexuswatch:
+    build:
+      context: ../..
+      dockerfile: deploy/nexuswatch/Dockerfile
+    container_name: nexuswatch-private-cloud
+    ports:
+      - "4173:4173"
+    env_file:
+      - ../../.env.local
+    environment:
+      NODE_ENV: production
+      PORT: 4173
+      VITE_VARIANT: nexus
+    restart: unless-stopped

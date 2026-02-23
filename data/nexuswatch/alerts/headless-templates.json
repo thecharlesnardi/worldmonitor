@@ -1,0 +1,22 @@
+[
+  {
+    "template_id": "nuclear-signal-shift",
+    "name": "Nuclear Signal Shift",
+    "priority": "high",
+    "trigger": "confidence_drop_or_status_change",
+    "channels": ["slack", "email"],
+    "subject": "[NexusWatch] Nuclear signal change detected",
+    "body_markdown": "A tracked site changed status or confidence. Review provenance and citations before distribution.",
+    "required_fields": ["feature_id", "source_id", "provenance_id", "confidence", "citation_count"]
+  },
+  {
+    "template_id": "coal-to-nuclear-candidate",
+    "name": "Coal-to-Nuclear Candidate Change",
+    "priority": "medium",
+    "trigger": "new_candidate_or_score_change",
+    "channels": ["teams", "email"],
+    "subject": "[NexusWatch] Coal-to-Nuclear candidate update",
+    "body_markdown": "A candidate site score changed. Validate source freshness and engineering constraints before action.",
+    "required_fields": ["feature_id", "transition_score", "source_id", "provenance_id"]
+  }
+]

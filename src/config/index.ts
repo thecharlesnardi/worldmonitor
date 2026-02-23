@@ -1,5 +1,6 @@
 // Configuration exports
 // For variant-specific builds, set VITE_VARIANT environment variable
+// VITE_VARIANT=nexus → NexusWatch internal globe-first command center
 // VITE_VARIANT=tech → tech.worldmonitor.app (tech-focused)
 // VITE_VARIANT=full → worldmonitor.app (geopolitical)
 // VITE_VARIANT=finance → finance.worldmonitor.app (markets/trading)
@@ -21,6 +22,12 @@ export { UNDERSEA_CABLES, MAP_URLS } from './geo';
 
 // AI Datacenters (shared)
 export { AI_DATA_CENTERS } from './ai-datacenters';
+export {
+  COAL_TO_NUCLEAR_FEASIBILITY_SITES,
+  INDUSTRIAL_HEAT_OPPORTUNITIES,
+  ADVANCED_REACTOR_PIPELINE_SITES,
+  type NexusLayerFeature,
+} from './nexus-geo';
 
 // Feeds configuration (shared functions, variant-specific data)
 export {

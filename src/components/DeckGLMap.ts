@@ -56,6 +56,9 @@ import {
   STRATEGIC_WATERWAYS,
   ECONOMIC_CENTERS,
   AI_DATA_CENTERS,
+  COAL_TO_NUCLEAR_FEASIBILITY_SITES,
+  INDUSTRIAL_HEAT_OPPORTUNITIES,
+  ADVANCED_REACTOR_PIPELINE_SITES,
   SITE_VARIANT,
   STARTUP_HUBS,
   ACCELERATORS,
@@ -144,6 +147,9 @@ const LIGHT_STYLE = 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.jso
 const LAYER_ZOOM_THRESHOLDS: Partial<Record<keyof MapLayers, { minZoom: number; showLabels?: number }>> = {
   bases: { minZoom: 3, showLabels: 5 },
   nuclear: { minZoom: 3 },
+  coalToNuclear: { minZoom: 2 },
+  industrialHeat: { minZoom: 2 },
+  advancedReactors: { minZoom: 2 },
   conflicts: { minZoom: 1, showLabels: 3 },
   economic: { minZoom: 3 },
   natural: { minZoom: 1, showLabels: 2 },
@@ -359,6 +365,9 @@ export class DeckGLMap {
     this.setupResizeObserver();
 
     this.createControls();
+    if (SITE_VARIANT === 'nexus') {
+      this.createAskGlobeShell();
+    }
     this.createTimeSlider();
     this.createLayerToggles();
     this.createLegend();
@@ -954,6 +963,21 @@ export class DeckGLMap {
       layers.push(this.createGhostLayer('nuclear-layer', NUCLEAR_FACILITIES.filter(f => f.status !== 'decommissioned'), d => [d.lon, d.lat], { radiusMinPixels: 12 }));
     }
 
+    // Coal-to-nuclear feasibility candidates
+    if (mapLayers.coalToNuclear && this.isLayerVisible('coalToNuclear')) {
+      layers.push(this.createCoalToNuclearLayer());
+    }
+
+    // Industrial heat demand opportunities
+    if (mapLayers.industrialHeat && this.isLayerVisible('industrialHeat')) {
+      layers.push(this.createIndustrialHeatLayer());
+    }
+
+    // Advanced reactor deployment pipeline
+    if (mapLayers.advancedReactors && this.isLayerVisible('advancedReactors')) {
+      layers.push(this.createAdvancedReactorsLayer());
+    }
+
     // Gamma irradiators layer — hidden at low zoom
     if (mapLayers.irradiators && this.isLayerVisible('irradiators')) {
       layers.push(this.createIrradiatorsLayer());
@@ -1097,7 +1121,7 @@ export class DeckGLMap {
     }
 
     // APT Groups layer (geopolitical variant only - always shown, no toggle)
-    if (SITE_VARIANT !== 'tech') {
+    if (SITE_VARIANT === 'full' || SITE_VARIANT === 'finance') {
       layers.push(this.createAPTGroupsLayer());
     }
 
@@ -1324,6 +1348,67 @@ export class DeckGLMap {
       sizeScale: 1,
       sizeMinPixels: 6,
       sizeMaxPixels: 15,
+      pickable: true,
+    });
+  }
+
+  private createCoalToNuclearLayer(): ScatterplotLayer {
+    return new ScatterplotLayer({
+      id: 'coal-to-nuclear-layer',
+      data: COAL_TO_NUCLEAR_FEASIBILITY_SITES,
+      getPosition: (d) => [d.lon, d.lat],
+      getRadius: 14000,
+      getFillColor: (d) => {
+        if (d.confidence >= 0.8) return [28, 179, 92, 210] as [number, number, number, number];
+        if (d.confidence >= 0.7) return [249, 168, 38, 210] as [number, number, number, number];
+        return [245, 99, 37, 210] as [number, number, number, number];
+      },
+      radiusMinPixels: 6,
+      radiusMaxPixels: 14,
+      lineWidthMinPixels: 1,
+      getLineColor: [250, 250, 250, 130] as [number, number, number, number],
+      stroked: true,
+      filled: true,
+      pickable: true,
+    });
+  }
+
+  private createIndustrialHeatLayer(): ScatterplotLayer {
+    return new ScatterplotLayer({
+      id: 'industrial-heat-layer',
+      data: INDUSTRIAL_HEAT_OPPORTUNITIES,
+      getPosition: (d) => [d.lon, d.lat],
+      getRadius: 12000,
+      getFillColor: (d) => {
+        if (d.confidence >= 0.8) return [79, 70, 229, 210] as [number, number, number, number];
+        if (d.confidence >= 0.7) return [124, 58, 237, 210] as [number, number, number, number];
+        return [167, 139, 250, 210] as [number, number, number, number];
+      },
+      radiusMinPixels: 5,
+      radiusMaxPixels: 13,
+      stroked: true,
+      getLineColor: [232, 232, 255, 120] as [number, number, number, number],
+      lineWidthMinPixels: 1,
+      pickable: true,
+    });
+  }
+
+  private createAdvancedReactorsLayer(): ScatterplotLayer {
+    return new ScatterplotLayer({
+      id: 'advanced-reactors-layer',
+      data: ADVANCED_REACTOR_PIPELINE_SITES,
+      getPosition: (d) => [d.lon, d.lat],
+      getRadius: 10000,
+      getFillColor: (d) => {
+        if (d.status === 'licensing') return [30, 144, 255, 215] as [number, number, number, number];
+        if (d.status === 'planned') return [56, 189, 248, 210] as [number, number, number, number];
+        return [125, 211, 252, 205] as [number, number, number, number];
+      },
+      radiusMinPixels: 5,
+      radiusMaxPixels: 12,
+      stroked: true,
+      getLineColor: [234, 250, 255, 120] as [number, number, number, number],
+      lineWidthMinPixels: 1,
       pickable: true,
     });
   }
@@ -2373,6 +2458,12 @@ export class DeckGLMap {
         return { html: `<div class="deckgl-tooltip"><strong>${text(obj.name)}</strong><br/>${text(obj.country)}</div>` };
       case 'nuclear-layer':
         return { html: `<div class="deckgl-tooltip"><strong>${text(obj.name)}</strong><br/>${text(obj.type)}</div>` };
+      case 'coal-to-nuclear-layer':
+        return { html: `<div class="deckgl-tooltip"><strong>${text(obj.name)}</strong><br/>${text(obj.status)} · confidence ${Math.round((obj.confidence ?? 0) * 100)}%</div>` };
+      case 'industrial-heat-layer':
+        return { html: `<div class="deckgl-tooltip"><strong>${text(obj.name)}</strong><br/>${text(obj.country)} · heat opportunity</div>` };
+      case 'advanced-reactors-layer':
+        return { html: `<div class="deckgl-tooltip"><strong>${text(obj.name)}</strong><br/>${text(obj.status)} · ${text(obj.country)}</div>` };
       case 'datacenters-layer':
         return { html: `<div class="deckgl-tooltip"><strong>${text(obj.name)}</strong><br/>${text(obj.owner)}</div>` };
       case 'cables-layer':
@@ -2605,6 +2696,9 @@ export class DeckGLMap {
       'conflict-zones-layer': 'conflict',
       'bases-layer': 'base',
       'nuclear-layer': 'nuclear',
+      'coal-to-nuclear-layer': 'nexusFeature',
+      'industrial-heat-layer': 'nexusFeature',
+      'advanced-reactors-layer': 'nexusFeature',
       'irradiators-layer': 'irradiator',
       'datacenters-layer': 'datacenter',
       'cables-layer': 'cable',
@@ -2719,6 +2813,75 @@ export class DeckGLMap {
     });
   }
 
+  private createAskGlobeShell(): void {
+    const shell = document.createElement('form');
+    shell.className = 'ask-globe-shell';
+    shell.innerHTML = `
+      <label class="ask-globe-label" for="askGlobeInput">Ask the Globe</label>
+      <div class="ask-globe-row">
+        <input id="askGlobeInput" class="ask-globe-input" type="text" maxlength="600" placeholder="Query active layers with provenance..." autocomplete="off" />
+        <button class="ask-globe-submit" type="submit">Ask</button>
+      </div>
+      <div class="ask-globe-status" aria-live="polite"></div>
+    `;
+
+    this.container.appendChild(shell);
+
+    const input = shell.querySelector<HTMLInputElement>('.ask-globe-input');
+    const status = shell.querySelector<HTMLElement>('.ask-globe-status');
+    const submit = shell.querySelector<HTMLButtonElement>('.ask-globe-submit');
+
+    shell.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const question = (input?.value ?? '').trim();
+      if (!question) {
+        if (status) status.textContent = 'Enter a question to query the globe.';
+        return;
+      }
+
+      const bounds = this.maplibreMap?.getBounds();
+      const payload = {
+        question,
+        active_layers: (Object.keys(this.state.layers) as (keyof MapLayers)[]).filter((key) => this.state.layers[key]),
+        map_bbox: bounds ? [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()] : undefined,
+        filters: {},
+        top_k: 8,
+      };
+
+      if (submit) submit.disabled = true;
+      if (status) status.textContent = 'Running grounded retrieval...';
+
+      try {
+        const response = await fetch('/api/ask-globe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const body = await response.json().catch(() => ({})) as { answer?: string; refusal_reason?: string; provenance_id?: string };
+
+        if (!response.ok) {
+          throw new Error(typeof body?.refusal_reason === 'string' ? body.refusal_reason : 'ask_globe_request_failed');
+        }
+
+        const statusText = body.refusal_reason
+          ? `No grounded answer: ${body.refusal_reason}`
+          : `${(body.answer || 'Grounded answer ready.').slice(0, 180)}${(body.answer || '').length > 180 ? '...' : ''}`;
+        if (status) status.textContent = statusText;
+
+        this.container.dispatchEvent(new CustomEvent('nexuswatch:ask-globe', {
+          detail: {
+            question,
+            response: body,
+          },
+        }));
+      } catch (error) {
+        if (status) status.textContent = `Ask failed: ${error instanceof Error ? error.message : String(error)}`;
+      } finally {
+        if (submit) submit.disabled = false;
+      }
+    });
+  }
+
   private createTimeSlider(): void {
     const slider = document.createElement('div');
     slider.className = 'time-slider deckgl-time-slider';
@@ -2785,6 +2948,14 @@ export class DeckGLMap {
           { key: 'waterways', label: t('components.deckgl.layers.strategicWaterways'), icon: '&#9875;' },
           { key: 'natural', label: t('components.deckgl.layers.naturalEvents'), icon: '&#127755;' },
           { key: 'cyberThreats', label: t('components.deckgl.layers.cyberThreats'), icon: '&#128737;' },
+        ]
+      : SITE_VARIANT === 'nexus'
+      ? [
+          { key: 'nuclear', label: t('components.deckgl.layers.nuclearSites'), icon: '&#9762;' },
+          { key: 'datacenters', label: t('components.deckgl.layers.aiDataCenters'), icon: '&#128421;' },
+          { key: 'coalToNuclear', label: t('components.deckgl.layers.coalToNuclear'), icon: '&#9881;' },
+          { key: 'industrialHeat', label: t('components.deckgl.layers.industrialHeat'), icon: '&#127777;' },
+          { key: 'advancedReactors', label: t('components.deckgl.layers.advancedReactors'), icon: '&#129302;' },
         ]
       : [
         { key: 'hotspots', label: t('components.deckgl.layers.intelHotspots'), icon: '&#127919;' },
@@ -2945,6 +3116,26 @@ export class DeckGLMap {
       </div>
     `;
 
+    const nexusHelpContent = `
+      ${helpHeader}
+      <div class="layer-help-content">
+        <div class="layer-help-section">
+          <div class="layer-help-title">Nuclear Siting Core</div>
+          <div class="layer-help-item"><span>${label('nuclearSites')}</span> Existing and active reactor footprint used for proximity and benchmark analysis.</div>
+          <div class="layer-help-item"><span>${label('aiDataCenters')}</span> Data-center load anchors for power-demand and co-location assessments.</div>
+        </div>
+        <div class="layer-help-section">
+          <div class="layer-help-title">Transition Opportunities</div>
+          <div class="layer-help-item"><span>${label('coalToNuclear')}</span> Coal retirement conversion candidates with transmission and workforce reuse signals.</div>
+          <div class="layer-help-item"><span>${label('industrialHeat')}</span> High-temperature process heat clusters suitable for nuclear heat pathways.</div>
+        </div>
+        <div class="layer-help-section">
+          <div class="layer-help-title">Pipeline Tracking</div>
+          <div class="layer-help-item"><span>${label('advancedReactors')}</span> Advanced reactor deployments, licensing milestones, and program maturity.</div>
+        </div>
+      </div>
+    `;
+
     const fullHelpContent = `
       ${helpHeader}
       <div class="layer-help-content">
@@ -2997,6 +3188,8 @@ export class DeckGLMap {
       ? techHelpContent
       : SITE_VARIANT === 'finance'
       ? financeHelpContent
+      : SITE_VARIANT === 'nexus'
+      ? nexusHelpContent
       : fullHelpContent;
 
     popup.querySelector('.layer-help-close')?.addEventListener('click', () => popup.remove());
@@ -3050,6 +3243,14 @@ export class DeckGLMap {
           { shape: shapes.hexagon('rgb(255, 210, 80)'), label: t('components.deckgl.legend.centralBank') },
           { shape: shapes.square('rgb(255, 150, 80)'), label: t('components.deckgl.legend.commodityHub') },
           { shape: shapes.triangle('rgb(80, 170, 255)'), label: t('components.deckgl.legend.waterway') },
+        ]
+      : SITE_VARIANT === 'nexus'
+      ? [
+          { shape: shapes.hexagon(isLight ? 'rgb(180, 120, 0)' : 'rgb(255, 220, 0)'), label: t('components.deckgl.legend.nuclear') },
+          { shape: shapes.square('rgb(136, 68, 255)'), label: t('components.deckgl.legend.datacenter') },
+          { shape: shapes.circle('rgb(28, 179, 92)'), label: t('components.deckgl.layers.coalToNuclear') },
+          { shape: shapes.circle('rgb(124, 58, 237)'), label: t('components.deckgl.layers.industrialHeat') },
+          { shape: shapes.circle('rgb(30, 144, 255)'), label: t('components.deckgl.layers.advancedReactors') },
         ]
       : [
           { shape: shapes.circle('rgb(255, 68, 68)'), label: t('components.deckgl.legend.highAlert') },

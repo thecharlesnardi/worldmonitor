@@ -692,7 +692,7 @@ export class App {
 
   private setupPizzIntIndicator(): void {
     // Skip DEFCON indicator for tech/startup and finance variants
-    if (SITE_VARIANT === 'tech' || SITE_VARIANT === 'finance') return;
+    if (SITE_VARIANT === 'tech' || SITE_VARIANT === 'finance' || SITE_VARIANT === 'nexus') return;
 
     this.pizzintIndicator = new PizzIntIndicator();
     const headerLeft = this.container.querySelector('.header-left');
@@ -1832,6 +1832,14 @@ export class App {
       <div class="header">
         <div class="header-left">
           <div class="variant-switcher">
+            <a href="#"
+               class="variant-option ${SITE_VARIANT === 'nexus' ? 'active' : ''}"
+               data-variant="nexus"
+               title="${t('header.nexus')}${SITE_VARIANT === 'nexus' ? ` ${t('common.currentVariant')}` : ''}">
+              <span class="variant-icon">⚛</span>
+              <span class="variant-label">${t('header.nexus')}</span>
+            </a>
+            <span class="variant-divider"></span>
             <a href="${this.isDesktopApp ? '#' : (SITE_VARIANT === 'full' ? '#' : 'https://worldmonitor.app')}"
                class="variant-option ${SITE_VARIANT === 'full' ? 'active' : ''}"
                data-variant="full"
@@ -1859,7 +1867,7 @@ export class App {
               <span class="variant-label">${t('header.finance')}</span>
             </a>
           </div>
-          <span class="logo">MONITOR</span><span class="version">v${__APP_VERSION__}</span>${BETA_MODE ? '<span class="beta-badge">BETA</span>' : ''}
+          <span class="logo">${SITE_VARIANT === 'nexus' ? 'NEXUSWATCH' : 'MONITOR'}</span><span class="version">v${__APP_VERSION__}</span>${BETA_MODE ? '<span class="beta-badge">BETA</span>' : ''}
           <a href="https://x.com/eliehabib" target="_blank" rel="noopener" class="credit-link">
             <svg class="x-logo" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             <span class="credit-text">@eliehabib</span>
@@ -1901,7 +1909,7 @@ export class App {
         <div class="map-section" id="mapSection">
           <div class="panel-header">
             <div class="panel-header-left">
-              <span class="panel-title">${SITE_VARIANT === 'tech' ? t('panels.techMap') : t('panels.map')}</span>
+              <span class="panel-title">${SITE_VARIANT === 'tech' ? t('panels.techMap') : SITE_VARIANT === 'nexus' ? t('panels.nexusMap') : t('panels.map')}</span>
             </div>
             <span class="header-clock" id="headerClock"></span>
             <button class="map-pin-btn" id="mapPinBtn" title="${t('header.pinMap')}">
@@ -2286,7 +2294,7 @@ export class App {
     }
 
     // Geopolitical-only panels (not needed for tech variant)
-    if (SITE_VARIANT === 'full') {
+    if (SITE_VARIANT === 'full' || SITE_VARIANT === 'nexus') {
       const gdeltIntelPanel = new GdeltIntelPanel();
       this.panels['gdelt-intel'] = gdeltIntelPanel;
 
@@ -3126,14 +3134,14 @@ export class App {
 
     // Load intelligence signals for CII calculation (protests, military, outages)
     // Only for geopolitical variant - tech variant doesn't need CII/focal points
-    if (SITE_VARIANT === 'full') {
+    if (SITE_VARIANT === 'full' || SITE_VARIANT === 'nexus') {
       tasks.push({ name: 'intelligence', task: runGuarded('intelligence', () => this.loadIntelligenceSignals()) });
     }
 
     // Conditionally load non-intelligence layers
     // NOTE: outages, protests, military are handled by loadIntelligenceSignals() above
     // They update the map when layers are enabled, so no duplicate tasks needed here
-    if (SITE_VARIANT === 'full') tasks.push({ name: 'firms', task: runGuarded('firms', () => this.loadFirmsData()) });
+    if (SITE_VARIANT === 'full' || SITE_VARIANT === 'nexus') tasks.push({ name: 'firms', task: runGuarded('firms', () => this.loadFirmsData()) });
     if (this.mapLayers.natural) tasks.push({ name: 'natural', task: runGuarded('natural', () => this.loadNatural()) });
     if (this.mapLayers.weather) tasks.push({ name: 'weather', task: runGuarded('weather', () => this.loadWeatherAlerts()) });
     if (this.mapLayers.ais) tasks.push({ name: 'ais', task: runGuarded('ais', () => this.loadAisSignals()) });
@@ -3450,7 +3458,7 @@ export class App {
     });
 
     // Intel (uses different source) - full variant only (defense/military news)
-    if (SITE_VARIANT === 'full') {
+    if (SITE_VARIANT === 'full' || SITE_VARIANT === 'nexus') {
       const enabledIntelSources = INTEL_SOURCES.filter(f => !this.disabledSources.has(f.name));
       const intelPanel = this.newsPanels['intel'];
       if (enabledIntelSources.length === 0) {
@@ -4606,7 +4614,7 @@ export class App {
 
     // Refresh intelligence signals for CII (geopolitical variant only)
     // This handles outages, protests, military - updates map when layers enabled
-    if (SITE_VARIANT === 'full') {
+    if (SITE_VARIANT === 'full' || SITE_VARIANT === 'nexus') {
       this.scheduleRefresh('intelligence', () => {
         this.intelligenceCache = {}; // Clear cache to force fresh fetch
         return this.loadIntelligenceSignals();

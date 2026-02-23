@@ -53,6 +53,7 @@
     }
   },
   "header": {
+    "nexus": "NEXUS",
     "world": "WORLD",
     "tech": "TECH",
     "live": "LIVE",
@@ -72,6 +73,7 @@
     "liveNews": "Live News",
     "markets": "Markets",
     "map": "Global Situation",
+    "nexusMap": "NexusWatch Globe",
     "techMap": "Global Tech",
     "techHubs": "Hot Tech Hubs",
     "status": "System Status",
@@ -687,6 +689,9 @@
         "conflictZones": "Conflict Zones",
         "militaryBases": "Military Bases",
         "nuclearSites": "Nuclear Sites",
+        "coalToNuclear": "Coal-to-Nuclear",
+        "industrialHeat": "Industrial Heat",
+        "advancedReactors": "Advanced Reactors",
         "gammaIrradiators": "Gamma Irradiators",
         "spaceports": "Spaceports",
         "pipelines": "Pipelines",

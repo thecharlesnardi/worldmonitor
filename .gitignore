@@ -20,12 +20,21 @@ CLAUDE.md
 skills/
 ideas/
 docs/internal/
+data/nexuswatch/internal-intake/**
+!data/nexuswatch/internal-intake/README.md
+data/nexuswatch/processed/**
+!data/nexuswatch/processed/.gitkeep
+data/nexuswatch/exports/**
+!data/nexuswatch/exports/.gitkeep
+data/nexuswatch/offline-bundle/**
+!data/nexuswatch/offline-bundle/.gitkeep
 test-results/
 src-tauri/sidecar/node/*
 !src-tauri/sidecar/node/.gitkeep
 
 # AI planning session state (not source code)
 .planning/
+supabase/.temp/
 
 # Compiled sebuf gateway bundle (built by scripts/build-sidecar-sebuf.mjs)
 api/[[][[].*.js

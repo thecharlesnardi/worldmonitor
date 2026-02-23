@@ -1,0 +1,18 @@
+version: '3.9'
+services:
+  nexuswatch:
+    build:
+      context: ../..
+      dockerfile: deploy/nexuswatch/Dockerfile
+    container_name: nexuswatch-airgap
+    ports:
+      - "4174:4173"
+    environment:
+      NODE_ENV: production
+      PORT: 4173
+      VITE_VARIANT: nexus
+      NEXUSWATCH_ALLOWED_ORIGINS: "http://localhost:4174"
+      NEXUSWATCH_OFFLINE_MODE: "1"
+    volumes:
+      - ../../data/nexuswatch:/app/data/nexuswatch:ro
+    restart: unless-stopped

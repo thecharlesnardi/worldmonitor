@@ -14,7 +14,18 @@ import { getNaturalEventIcon } from '@/services/eonet';
 import { getHotspotEscalation, getEscalationChange24h } from '@/services/hotspot-escalation';
 import { getCableHealthRecord } from '@/services/cable-health';
 
-export type PopupType = 'conflict' | 'hotspot' | 'earthquake' | 'weather' | 'base' | 'waterway' | 'apt' | 'cyberThreat' | 'nuclear' | 'economic' | 'irradiator' | 'pipeline' | 'cable' | 'cable-advisory' | 'repair-ship' | 'outage' | 'datacenter' | 'datacenterCluster' | 'ais' | 'protest' | 'protestCluster' | 'flight' | 'militaryFlight' | 'militaryVessel' | 'militaryFlightCluster' | 'militaryVesselCluster' | 'natEvent' | 'port' | 'spaceport' | 'mineral' | 'startupHub' | 'cloudRegion' | 'techHQ' | 'accelerator' | 'techEvent' | 'techHQCluster' | 'techEventCluster' | 'techActivity' | 'geoActivity' | 'stockExchange' | 'financialCenter' | 'centralBank' | 'commodityHub';
+export type PopupType = 'conflict' | 'hotspot' | 'earthquake' | 'weather' | 'base' | 'waterway' | 'apt' | 'cyberThreat' | 'nuclear' | 'economic' | 'irradiator' | 'pipeline' | 'cable' | 'cable-advisory' | 'repair-ship' | 'outage' | 'datacenter' | 'datacenterCluster' | 'ais' | 'protest' | 'protestCluster' | 'flight' | 'militaryFlight' | 'militaryVessel' | 'militaryFlightCluster' | 'militaryVesselCluster' | 'natEvent' | 'port' | 'spaceport' | 'mineral' | 'startupHub' | 'cloudRegion' | 'techHQ' | 'accelerator' | 'techEvent' | 'techHQCluster' | 'techEventCluster' | 'techActivity' | 'geoActivity' | 'stockExchange' | 'financialCenter' | 'centralBank' | 'commodityHub' | 'nexusFeature';
+
+interface NexusFeaturePopupData {
+  name: string;
+  country: string;
+  status: string;
+  summary?: string;
+  confidence?: number;
+  source_urls?: string[];
+  last_verified?: string;
+  layer_id?: string;
+}
 
 interface TechEventPopupData {
   id: string;
@@ -120,7 +131,7 @@ interface DatacenterClusterData {
 
 interface PopupData {
   type: PopupType;
-  data: ConflictZone | Hotspot | Earthquake | WeatherAlert | MilitaryBase | StrategicWaterway | APTGroup | CyberThreat | NuclearFacility | EconomicCenter | GammaIrradiator | Pipeline | UnderseaCable | CableAdvisory | RepairShip | InternetOutage | AIDataCenter | AisDisruptionEvent | SocialUnrestEvent | AirportDelayAlert | MilitaryFlight | MilitaryVessel | MilitaryFlightCluster | MilitaryVesselCluster | NaturalEvent | Port | Spaceport | CriticalMineralProject | StartupHub | CloudRegion | TechHQ | Accelerator | TechEventPopupData | TechHQClusterData | TechEventClusterData | ProtestClusterData | DatacenterClusterData | TechHubActivity | GeoHubActivity | StockExchangePopupData | FinancialCenterPopupData | CentralBankPopupData | CommodityHubPopupData;
+  data: ConflictZone | Hotspot | Earthquake | WeatherAlert | MilitaryBase | StrategicWaterway | APTGroup | CyberThreat | NuclearFacility | EconomicCenter | GammaIrradiator | Pipeline | UnderseaCable | CableAdvisory | RepairShip | InternetOutage | AIDataCenter | AisDisruptionEvent | SocialUnrestEvent | AirportDelayAlert | MilitaryFlight | MilitaryVessel | MilitaryFlightCluster | MilitaryVesselCluster | NaturalEvent | Port | Spaceport | CriticalMineralProject | StartupHub | CloudRegion | TechHQ | Accelerator | TechEventPopupData | TechHQClusterData | TechEventClusterData | ProtestClusterData | DatacenterClusterData | TechHubActivity | GeoHubActivity | StockExchangePopupData | FinancialCenterPopupData | CentralBankPopupData | CommodityHubPopupData | NexusFeaturePopupData;
   relatedNews?: NewsItem[];
   x: number;
   y: number;
@@ -428,9 +439,55 @@ export class MapPopup {
         return this.renderCentralBankPopup(data.data as CentralBankPopupData);
       case 'commodityHub':
         return this.renderCommodityHubPopup(data.data as CommodityHubPopupData);
+      case 'nexusFeature':
+        return this.renderNexusFeaturePopup(data.data as NexusFeaturePopupData);
       default:
         return '';
     }
+  }
+
+  private renderNexusFeaturePopup(feature: NexusFeaturePopupData): string {
+    const confidence = typeof feature.confidence === 'number'
+      ? `${Math.round(feature.confidence * 100)}%`
+      : t('popups.unknown');
+    const sources = (feature.source_urls ?? []).slice(0, 3);
+
+    return `
+      <div class="popup-header economic">
+        <span class="popup-title">${escapeHtml((feature.name || '').toUpperCase())}</span>
+        <span class="popup-badge elevated">${escapeHtml((feature.status || '').toUpperCase())}</span>
+        <button class="popup-close">×</button>
+      </div>
+      <div class="popup-body">
+        ${feature.summary ? `<p class="popup-description">${escapeHtml(feature.summary)}</p>` : ''}
+        <div class="popup-stats">
+          <div class="popup-stat">
+            <span class="stat-label">${t('popups.location')}</span>
+            <span class="stat-value">${escapeHtml(feature.country || t('popups.unknown'))}</span>
+          </div>
+          <div class="popup-stat">
+            <span class="stat-label">Confidence</span>
+            <span class="stat-value">${escapeHtml(confidence)}</span>
+          </div>
+          <div class="popup-stat">
+            <span class="stat-label">Layer</span>
+            <span class="stat-value">${escapeHtml(feature.layer_id || t('popups.unknown'))}</span>
+          </div>
+          <div class="popup-stat">
+            <span class="stat-label">Last Verified</span>
+            <span class="stat-value">${escapeHtml(feature.last_verified || t('popups.unknown'))}</span>
+          </div>
+        </div>
+        ${sources.length > 0 ? `
+          <div class="popup-section">
+            <span class="section-label">Sources</span>
+            <div class="popup-links">
+              ${sources.map((source) => `<a class="popup-link" href="${sanitizeUrl(source)}" target="_blank" rel="noopener">${escapeHtml(source)}</a>`).join('')}
+            </div>
+          </div>
+        ` : ''}
+      </div>
+    `;
   }
 
   private renderConflictPopup(conflict: ConflictZone): string {

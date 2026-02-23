@@ -55,6 +55,9 @@ const FULL_MAP_LAYERS: MapLayers = {
   hotspots: true,
   ais: false,
   nuclear: true,
+  coalToNuclear: false,
+  industrialHeat: false,
+  advancedReactors: false,
   irradiators: false,
   sanctions: true,
   weather: true,
@@ -96,6 +99,9 @@ const FULL_MOBILE_MAP_LAYERS: MapLayers = {
   hotspots: true,
   ais: false,
   nuclear: false,
+  coalToNuclear: false,
+  industrialHeat: false,
+  advancedReactors: false,
   irradiators: false,
   sanctions: true,
   weather: true,
@@ -122,6 +128,113 @@ const FULL_MOBILE_MAP_LAYERS: MapLayers = {
   techHQs: false,
   techEvents: false,
   // Finance layers (disabled in full variant)
+  stockExchanges: false,
+  financialCenters: false,
+  centralBanks: false,
+  commodityHubs: false,
+  gulfInvestments: false,
+};
+
+// ============================================
+// NEXUS VARIANT (Nuclear Consulting Command Center)
+// ============================================
+const NEXUS_PANELS: Record<string, PanelConfig> = {
+  map: { name: 'NexusWatch Globe', enabled: true, priority: 1 },
+  'live-news': { name: 'Nuclear + Energy Signals', enabled: true, priority: 1 },
+  insights: { name: 'Grounded Insights', enabled: true, priority: 1 },
+  'strategic-posture': { name: 'Strategic Posture', enabled: true, priority: 1 },
+  cii: { name: 'Country Instability', enabled: true, priority: 1 },
+  'strategic-risk': { name: 'Strategic Risk Overview', enabled: true, priority: 1 },
+  energy: { name: 'Energy & Resources', enabled: true, priority: 1 },
+  gov: { name: 'Government', enabled: true, priority: 1 },
+  thinktanks: { name: 'Think Tanks', enabled: true, priority: 1 },
+  markets: { name: 'Markets', enabled: true, priority: 2 },
+  economic: { name: 'Economic Indicators', enabled: true, priority: 2 },
+  'macro-signals': { name: 'Market Radar', enabled: true, priority: 2 },
+  monitors: { name: 'My Monitors', enabled: true, priority: 2 },
+};
+
+const NEXUS_MAP_LAYERS: MapLayers = {
+  conflicts: false,
+  bases: false,
+  cables: false,
+  pipelines: false,
+  hotspots: false,
+  ais: false,
+  nuclear: true,
+  coalToNuclear: true,
+  industrialHeat: true,
+  advancedReactors: true,
+  irradiators: false,
+  sanctions: false,
+  weather: false,
+  economic: false,
+  waterways: false,
+  outages: false,
+  cyberThreats: false,
+  datacenters: true,
+  protests: false,
+  flights: false,
+  military: false,
+  natural: false,
+  spaceports: false,
+  minerals: false,
+  fires: false,
+  // Data source layers
+  ucdpEvents: false,
+  displacement: false,
+  climate: false,
+  // Tech layers (disabled in nexus variant)
+  startupHubs: false,
+  cloudRegions: false,
+  accelerators: false,
+  techHQs: false,
+  techEvents: false,
+  // Finance layers (disabled in nexus variant)
+  stockExchanges: false,
+  financialCenters: false,
+  centralBanks: false,
+  commodityHubs: false,
+  gulfInvestments: false,
+};
+
+const NEXUS_MOBILE_MAP_LAYERS: MapLayers = {
+  conflicts: false,
+  bases: false,
+  cables: false,
+  pipelines: false,
+  hotspots: false,
+  ais: false,
+  nuclear: true,
+  coalToNuclear: false,
+  industrialHeat: false,
+  advancedReactors: false,
+  irradiators: false,
+  sanctions: false,
+  weather: false,
+  economic: false,
+  waterways: false,
+  outages: false,
+  cyberThreats: false,
+  datacenters: true,
+  protests: false,
+  flights: false,
+  military: false,
+  natural: false,
+  spaceports: false,
+  minerals: false,
+  fires: false,
+  // Data source layers
+  ucdpEvents: false,
+  displacement: false,
+  climate: false,
+  // Tech layers (disabled in nexus variant)
+  startupHubs: false,
+  cloudRegions: false,
+  accelerators: false,
+  techHQs: false,
+  techEvents: false,
+  // Finance layers (disabled in nexus variant)
   stockExchanges: false,
   financialCenters: false,
   centralBanks: false,
@@ -177,6 +290,9 @@ const TECH_MAP_LAYERS: MapLayers = {
   hotspots: false,
   ais: false,
   nuclear: false,
+  coalToNuclear: false,
+  industrialHeat: false,
+  advancedReactors: false,
   irradiators: false,
   sanctions: false,
   weather: true,
@@ -218,6 +334,9 @@ const TECH_MOBILE_MAP_LAYERS: MapLayers = {
   hotspots: false,
   ais: false,
   nuclear: false,
+  coalToNuclear: false,
+  industrialHeat: false,
+  advancedReactors: false,
   irradiators: false,
   sanctions: false,
   weather: false,
@@ -294,6 +413,9 @@ const FINANCE_MAP_LAYERS: MapLayers = {
   hotspots: false,
   ais: false,
   nuclear: false,
+  coalToNuclear: false,
+  industrialHeat: false,
+  advancedReactors: false,
   irradiators: false,
   sanctions: true,
   weather: true,
@@ -335,6 +457,9 @@ const FINANCE_MOBILE_MAP_LAYERS: MapLayers = {
   hotspots: false,
   ais: false,
   nuclear: false,
+  coalToNuclear: false,
+  industrialHeat: false,
+  advancedReactors: false,
   irradiators: false,
   sanctions: false,
   weather: false,
@@ -371,9 +496,30 @@ const FINANCE_MOBILE_MAP_LAYERS: MapLayers = {
 // ============================================
 // VARIANT-AWARE EXPORTS
 // ============================================
-export const DEFAULT_PANELS = SITE_VARIANT === 'tech' ? TECH_PANELS : SITE_VARIANT === 'finance' ? FINANCE_PANELS : FULL_PANELS;
-export const DEFAULT_MAP_LAYERS = SITE_VARIANT === 'tech' ? TECH_MAP_LAYERS : SITE_VARIANT === 'finance' ? FINANCE_MAP_LAYERS : FULL_MAP_LAYERS;
-export const MOBILE_DEFAULT_MAP_LAYERS = SITE_VARIANT === 'tech' ? TECH_MOBILE_MAP_LAYERS : SITE_VARIANT === 'finance' ? FINANCE_MOBILE_MAP_LAYERS : FULL_MOBILE_MAP_LAYERS;
+export const DEFAULT_PANELS =
+  SITE_VARIANT === 'nexus'
+    ? NEXUS_PANELS
+    : SITE_VARIANT === 'tech'
+    ? TECH_PANELS
+    : SITE_VARIANT === 'finance'
+    ? FINANCE_PANELS
+    : FULL_PANELS;
+export const DEFAULT_MAP_LAYERS =
+  SITE_VARIANT === 'nexus'
+    ? NEXUS_MAP_LAYERS
+    : SITE_VARIANT === 'tech'
+    ? TECH_MAP_LAYERS
+    : SITE_VARIANT === 'finance'
+    ? FINANCE_MAP_LAYERS
+    : FULL_MAP_LAYERS;
+export const MOBILE_DEFAULT_MAP_LAYERS =
+  SITE_VARIANT === 'nexus'
+    ? NEXUS_MOBILE_MAP_LAYERS
+    : SITE_VARIANT === 'tech'
+    ? TECH_MOBILE_MAP_LAYERS
+    : SITE_VARIANT === 'finance'
+    ? FINANCE_MOBILE_MAP_LAYERS
+    : FULL_MOBILE_MAP_LAYERS;
 
 /** Maps map-layer toggle keys to their data-freshness source IDs (single source of truth). */
 export const LAYER_TO_SOURCE: Partial<Record<keyof MapLayers, DataSourceId[]>> = {
@@ -387,6 +533,9 @@ export const LAYER_TO_SOURCE: Partial<Record<keyof MapLayers, DataSourceId[]>> =
   ucdpEvents: ['ucdp_events'],
   displacement: ['unhcr'],
   climate: ['climate'],
+  coalToNuclear: ['economic'],
+  industrialHeat: ['economic'],
+  advancedReactors: ['rss'],
 };
 
 // Monitor palette — fixed category colors persisted to localStorage (not theme-dependent)

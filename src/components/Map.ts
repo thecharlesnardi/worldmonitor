@@ -27,6 +27,9 @@ import {
   APT_GROUPS,
   ECONOMIC_CENTERS,
   AI_DATA_CENTERS,
+  COAL_TO_NUCLEAR_FEASIBILITY_SITES,
+  INDUSTRIAL_HEAT_OPPORTUNITIES,
+  ADVANCED_REACTOR_PIPELINE_SITES,
   PORTS,
   SPACEPORTS,
   CRITICAL_MINERALS,
@@ -94,6 +97,9 @@ export class MapComponent {
   > = {
     bases: { minZoom: 3, showLabels: 5 },
     nuclear: { minZoom: 2 },
+    coalToNuclear: { minZoom: 2 },
+    industrialHeat: { minZoom: 2 },
+    advancedReactors: { minZoom: 2 },
     conflicts: { minZoom: 1, showLabels: 3 },
     economic: { minZoom: 2 },
     natural: { minZoom: 1, showLabels: 2 },
@@ -352,12 +358,28 @@ export class MapComponent {
       'sanctions', 'economic', 'waterways',               // geopolitical/economic
       'natural', 'weather',                               // natural events
     ];
-    const layers = SITE_VARIANT === 'tech' ? techLayers : SITE_VARIANT === 'finance' ? financeLayers : fullLayers;
+    const nexusLayers: (keyof MapLayers)[] = [
+      'nuclear',
+      'datacenters',
+      'coalToNuclear',
+      'industrialHeat',
+      'advancedReactors',
+    ];
+    const layers = SITE_VARIANT === 'tech'
+      ? techLayers
+      : SITE_VARIANT === 'finance'
+      ? financeLayers
+      : SITE_VARIANT === 'nexus'
+      ? nexusLayers
+      : fullLayers;
     const layerLabelKeys: Partial<Record<keyof MapLayers, string>> = {
       hotspots: 'components.deckgl.layers.intelHotspots',
       conflicts: 'components.deckgl.layers.conflictZones',
       bases: 'components.deckgl.layers.militaryBases',
       nuclear: 'components.deckgl.layers.nuclearSites',
+      coalToNuclear: 'components.deckgl.layers.coalToNuclear',
+      industrialHeat: 'components.deckgl.layers.industrialHeat',
+      advancedReactors: 'components.deckgl.layers.advancedReactors',
       irradiators: 'components.deckgl.layers.gammaIrradiators',
       military: 'components.deckgl.layers.militaryActivity',
       cables: 'components.deckgl.layers.underseaCables',
@@ -532,10 +554,29 @@ export class MapComponent {
       </div>
     `;
 
+    const nexusHelpContent = `
+      ${helpHeader}
+      <div class="layer-help-content">
+        <div class="layer-help-section">
+          <div class="layer-help-title">Nuclear Siting Core</div>
+          <div class="layer-help-item"><span>${label('nuclearSites')}</span> Existing reactors for baseline nuclear footprint context.</div>
+          <div class="layer-help-item"><span>${label('aiDataCenters')}</span> Hyperscaler and AI demand nodes for siting pressure analysis.</div>
+        </div>
+        <div class="layer-help-section">
+          <div class="layer-help-title">Opportunity Layers</div>
+          <div class="layer-help-item"><span>${label('coalToNuclear')}</span> Coal retirement conversion candidates and repowering opportunities.</div>
+          <div class="layer-help-item"><span>${label('industrialHeat')}</span> Industrial process-heat clusters suited to nuclear heat pathways.</div>
+          <div class="layer-help-item"><span>${label('advancedReactors')}</span> Advanced reactor pipeline with status and confidence markers.</div>
+        </div>
+      </div>
+    `;
+
     popup.innerHTML = SITE_VARIANT === 'tech'
       ? techHelpContent
       : SITE_VARIANT === 'finance'
       ? financeHelpContent
+      : SITE_VARIANT === 'nexus'
+      ? nexusHelpContent
       : fullHelpContent;
 
     popup.querySelector('.layer-help-close')?.addEventListener('click', () => popup.remove());
@@ -581,6 +622,14 @@ export class MapComponent {
         <div class="map-legend-item"><span class="legend-dot" style="background:#f59e0b"></span>${escapeHtml(t('components.deckgl.layers.cloudRegions').toUpperCase())}</div>
         <div class="map-legend-item"><span class="map-legend-icon" style="color:#a855f7">📅</span>${escapeHtml(t('components.deckgl.layers.techEvents').toUpperCase())}</div>
         <div class="map-legend-item"><span class="map-legend-icon" style="color:#4ecdc4">💾</span>${escapeHtml(t('components.deckgl.layers.aiDataCenters').toUpperCase())}</div>
+      `;
+    } else if (SITE_VARIANT === 'nexus') {
+      legend.innerHTML = `
+        <div class="map-legend-item"><span class="legend-dot" style="background:#f59e0b"></span>${escapeHtml(t('components.deckgl.layers.nuclearSites').toUpperCase())}</div>
+        <div class="map-legend-item"><span class="legend-dot" style="background:#8b5cf6"></span>${escapeHtml(t('components.deckgl.layers.aiDataCenters').toUpperCase())}</div>
+        <div class="map-legend-item"><span class="legend-dot" style="background:#22c55e"></span>${escapeHtml(t('components.deckgl.layers.coalToNuclear').toUpperCase())}</div>
+        <div class="map-legend-item"><span class="legend-dot" style="background:#7c3aed"></span>${escapeHtml(t('components.deckgl.layers.industrialHeat').toUpperCase())}</div>
+        <div class="map-legend-item"><span class="legend-dot" style="background:#38bdf8"></span>${escapeHtml(t('components.deckgl.layers.advancedReactors').toUpperCase())}</div>
       `;
     } else {
       // Geopolitical variant legend
@@ -1251,7 +1300,7 @@ export class MapComponent {
     }
 
     // APT groups (geopolitical variant only)
-    if (SITE_VARIANT !== 'tech') {
+    if (SITE_VARIANT === 'full' || SITE_VARIANT === 'finance') {
       this.renderAPTMarkers(projection);
     }
 
@@ -1274,6 +1323,87 @@ export class MapComponent {
           this.popup.show({
             type: 'nuclear',
             data: facility,
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top,
+          });
+        });
+
+        this.overlays.appendChild(div);
+      });
+    }
+
+    if (this.state.layers.coalToNuclear) {
+      COAL_TO_NUCLEAR_FEASIBILITY_SITES.forEach((feature) => {
+        const pos = projection([feature.lon, feature.lat]);
+        if (!pos) return;
+
+        const div = document.createElement('div');
+        div.className = 'nexus-candidate-marker';
+        div.style.left = `${pos[0]}px`;
+        div.style.top = `${pos[1]}px`;
+        div.style.background = '#22c55e';
+        div.title = feature.name;
+
+        div.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const rect = this.container.getBoundingClientRect();
+          this.popup.show({
+            type: 'nexusFeature',
+            data: feature,
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top,
+          });
+        });
+
+        this.overlays.appendChild(div);
+      });
+    }
+
+    if (this.state.layers.industrialHeat) {
+      INDUSTRIAL_HEAT_OPPORTUNITIES.forEach((feature) => {
+        const pos = projection([feature.lon, feature.lat]);
+        if (!pos) return;
+
+        const div = document.createElement('div');
+        div.className = 'nexus-candidate-marker';
+        div.style.left = `${pos[0]}px`;
+        div.style.top = `${pos[1]}px`;
+        div.style.background = '#8b5cf6';
+        div.title = feature.name;
+
+        div.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const rect = this.container.getBoundingClientRect();
+          this.popup.show({
+            type: 'nexusFeature',
+            data: feature,
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top,
+          });
+        });
+
+        this.overlays.appendChild(div);
+      });
+    }
+
+    if (this.state.layers.advancedReactors) {
+      ADVANCED_REACTOR_PIPELINE_SITES.forEach((feature) => {
+        const pos = projection([feature.lon, feature.lat]);
+        if (!pos) return;
+
+        const div = document.createElement('div');
+        div.className = 'nexus-candidate-marker';
+        div.style.left = `${pos[0]}px`;
+        div.style.top = `${pos[1]}px`;
+        div.style.background = '#38bdf8';
+        div.title = feature.name;
+
+        div.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const rect = this.container.getBoundingClientRect();
+          this.popup.show({
+            type: 'nexusFeature',
+            data: feature,
             x: e.clientX - rect.left,
             y: e.clientY - rect.top,
           });

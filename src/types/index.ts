@@ -487,6 +487,9 @@ export interface MapLayers {
   hotspots: boolean;
   ais: boolean;
   nuclear: boolean;
+  coalToNuclear: boolean;
+  industrialHeat: boolean;
+  advancedReactors: boolean;
   irradiators: boolean;
   sanctions: boolean;
   weather: boolean;
@@ -519,6 +522,57 @@ export interface MapLayers {
   commodityHubs: boolean;
   // Gulf FDI layers
   gulfInvestments: boolean;
+}
+
+export type NexusLayerId =
+  | 'nuclear'
+  | 'datacenters'
+  | 'coalToNuclear'
+  | 'industrialHeat'
+  | 'advancedReactors';
+
+export interface LayerFeatureProperties {
+  feature_id: string;
+  layer_id: NexusLayerId;
+  name: string;
+  lat: number;
+  lon: number;
+  source_refs: string[];
+  updated_at: string;
+  confidence: number;
+  tags: string[];
+}
+
+export interface AskGlobeRequest {
+  question: string;
+  active_layers: NexusLayerId[];
+  map_bbox?: [number, number, number, number];
+  filters?: Record<string, unknown>;
+  top_k?: number;
+}
+
+export interface AskGlobeResponse {
+  answer: string;
+  answer_id?: string;
+  confidence: number;
+  citations: Array<{
+    citation_id: string;
+    source_id: string;
+    title: string;
+    url?: string;
+    chunk_id?: string;
+    snippet?: string;
+  }>;
+  provenance_id: string;
+  matched_features: string[];
+  refusal_reason?: string;
+}
+
+export interface FeedbackRequest {
+  answer_id: string;
+  rating: 'up' | 'down';
+  comment?: string;
+  correction_tags?: string[];
 }
 
 export interface AIDataCenter {

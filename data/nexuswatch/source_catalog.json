@@ -1,0 +1,334 @@
+[
+  {
+    "source_id": "iaea-pris",
+    "name": "IAEA PRIS",
+    "category": "public-geospatial",
+    "canonical_url": "https://pris.iaea.org",
+    "license": "IAEA terms",
+    "cadence": "daily",
+    "owner": "NexusWatch Data Engineering",
+    "sensitivity": "public",
+    "parser": "scheduled_csv_ingest",
+    "freshness_sla": "P0 <= 24h",
+    "validation_rules": [
+      "required_fields:name,country,status,lat,lon",
+      "lat_lon_range",
+      "country_iso_normalization"
+    ],
+    "confidence_model": "base_source_score*0.40 + recency_score*0.25 + schema_validity*0.20 + cross_source_agreement*0.15",
+    "priority_tier": "P0",
+    "legal_notes": "Use attribution in analyst exports; do not imply IAEA endorsement."
+  },
+  {
+    "source_id": "iaea-aris",
+    "name": "IAEA ARIS",
+    "category": "public-program",
+    "canonical_url": "https://aris.iaea.org",
+    "license": "IAEA terms",
+    "cadence": "weekly",
+    "owner": "NexusWatch Data Engineering",
+    "sensitivity": "public",
+    "parser": "html_table_extract",
+    "freshness_sla": "P0 <= 7d",
+    "validation_rules": [
+      "required_fields:reactor_name,developer,status",
+      "enum_status_check",
+      "dedupe_on_name_country"
+    ],
+    "confidence_model": "base_source_score*0.45 + recency_score*0.20 + schema_validity*0.20 + cross_source_agreement*0.15",
+    "priority_tier": "P0",
+    "legal_notes": "Preserve ARIS source links in provenance records."
+  },
+  {
+    "source_id": "iaea-cnpp",
+    "name": "IAEA CNPP",
+    "category": "public-program",
+    "canonical_url": "https://cnpp.iaea.org",
+    "license": "IAEA terms",
+    "cadence": "weekly",
+    "owner": "NexusWatch Data Engineering",
+    "sensitivity": "public",
+    "parser": "html_parser",
+    "freshness_sla": "P0 <= 7d",
+    "validation_rules": [
+      "required_fields:country,program_status",
+      "country_iso_normalization"
+    ],
+    "confidence_model": "base_source_score*0.45 + recency_score*0.20 + schema_validity*0.20 + cross_source_agreement*0.15",
+    "priority_tier": "P0",
+    "legal_notes": "Treat as country program metadata; never infer project certainty without corroboration."
+  },
+  {
+    "source_id": "iaea-nfcfdb",
+    "name": "IAEA NFCFDB",
+    "category": "public-fuel-cycle",
+    "canonical_url": "https://nfcfdb.iaea.org",
+    "license": "IAEA terms",
+    "cadence": "monthly",
+    "owner": "NexusWatch Data Engineering",
+    "sensitivity": "public",
+    "parser": "csv_ingest",
+    "freshness_sla": "P0 <= 30d",
+    "validation_rules": [
+      "required_fields:facility_type,country,lat,lon",
+      "lat_lon_range"
+    ],
+    "confidence_model": "base_source_score*0.50 + recency_score*0.20 + schema_validity*0.15 + cross_source_agreement*0.15",
+    "priority_tier": "P0",
+    "legal_notes": "Include source timestamp and snapshot hash in lineage."
+  },
+  {
+    "source_id": "iaea-rrdb",
+    "name": "IAEA Research Reactor Database",
+    "category": "public-reactor",
+    "canonical_url": "https://nucleus.iaea.org/RRDB",
+    "license": "IAEA terms",
+    "cadence": "weekly",
+    "owner": "NexusWatch Data Engineering",
+    "sensitivity": "public",
+    "parser": "table_extract",
+    "freshness_sla": "P0 <= 7d",
+    "validation_rules": [
+      "required_fields:name,country,status",
+      "dedupe_on_name_country"
+    ],
+    "confidence_model": "base_source_score*0.45 + recency_score*0.20 + schema_validity*0.20 + cross_source_agreement*0.15",
+    "priority_tier": "P0",
+    "legal_notes": "Reactor-level references must remain linked in final answer citations."
+  },
+  {
+    "source_id": "gem-nuclear-tracker",
+    "name": "Global Energy Monitor Nuclear Tracker",
+    "category": "public-infrastructure",
+    "canonical_url": "https://globalenergymonitor.org/projects/global-nuclear-power-tracker",
+    "license": "GEM terms",
+    "cadence": "monthly",
+    "owner": "NexusWatch Data Engineering",
+    "sensitivity": "public",
+    "parser": "csv_ingest",
+    "freshness_sla": "P0 <= 30d",
+    "validation_rules": [
+      "required_fields:project_name,status,lat,lon",
+      "lat_lon_range",
+      "status_enum"
+    ],
+    "confidence_model": "base_source_score*0.35 + recency_score*0.20 + schema_validity*0.20 + cross_source_agreement*0.25",
+    "priority_tier": "P0",
+    "legal_notes": "Track GEM dataset version ID in metadata."
+  },
+  {
+    "source_id": "gem-coal-tracker",
+    "name": "Global Energy Monitor Coal Tracker",
+    "category": "public-infrastructure",
+    "canonical_url": "https://globalenergymonitor.org/projects/global-coal-plant-tracker",
+    "license": "GEM terms",
+    "cadence": "monthly",
+    "owner": "NexusWatch Data Engineering",
+    "sensitivity": "public",
+    "parser": "csv_ingest",
+    "freshness_sla": "P0 <= 30d",
+    "validation_rules": [
+      "required_fields:plant_name,status,capacity_mw,lat,lon",
+      "lat_lon_range",
+      "capacity_positive"
+    ],
+    "confidence_model": "base_source_score*0.35 + recency_score*0.20 + schema_validity*0.20 + cross_source_agreement*0.25",
+    "priority_tier": "P0",
+    "legal_notes": "Use GEM attribution in map popup and exports."
+  },
+  {
+    "source_id": "oecd-nea-smr-dashboard",
+    "name": "OECD-NEA SMR Digital Dashboard",
+    "category": "public-program",
+    "canonical_url": "https://www.oecd-nea.org/jcms/pl_78708/smr-dashboard",
+    "license": "OECD terms",
+    "cadence": "weekly",
+    "owner": "NexusWatch Data Engineering",
+    "sensitivity": "public",
+    "parser": "html_extract",
+    "freshness_sla": "P0 <= 7d",
+    "validation_rules": [
+      "required_fields:project_name,country,status",
+      "status_enum"
+    ],
+    "confidence_model": "base_source_score*0.45 + recency_score*0.20 + schema_validity*0.15 + cross_source_agreement*0.20",
+    "priority_tier": "P0",
+    "legal_notes": "Keep OECD source URL and retrieval date in provenance chain."
+  },
+  {
+    "source_id": "doe-c2n",
+    "name": "DOE Coal-to-Nuclear Datasets and Reports",
+    "category": "public-policy",
+    "canonical_url": "https://www.energy.gov/ne/articles/clean-energy-option-coal-communities",
+    "license": "US government public information",
+    "cadence": "quarterly",
+    "owner": "NexusWatch Data Engineering",
+    "sensitivity": "public",
+    "parser": "pdf_table_extract",
+    "freshness_sla": "P0 <= 90d",
+    "validation_rules": [
+      "required_fields:site_name,state,transition_score",
+      "score_range_0_100"
+    ],
+    "confidence_model": "base_source_score*0.50 + recency_score*0.15 + schema_validity*0.15 + cross_source_agreement*0.20",
+    "priority_tier": "P0",
+    "legal_notes": "Retain report page-level citations for all extracted claims."
+  },
+  {
+    "source_id": "eia-grid",
+    "name": "EIA Nuclear Outage + Grid Datasets",
+    "category": "public-grid",
+    "canonical_url": "https://www.eia.gov/electricity/",
+    "license": "US government public information",
+    "cadence": "daily",
+    "owner": "NexusWatch Data Engineering",
+    "sensitivity": "public",
+    "parser": "api_ingest",
+    "freshness_sla": "P0 <= 24h",
+    "validation_rules": [
+      "required_fields:plant_or_region,timestamp,metric",
+      "timestamp_utc",
+      "duplicate_record_hash_check"
+    ],
+    "confidence_model": "base_source_score*0.50 + recency_score*0.20 + schema_validity*0.20 + cross_source_agreement*0.10",
+    "priority_tier": "P0",
+    "legal_notes": "EIA API responses should be cached and hash-stamped per ingestion batch."
+  },
+  {
+    "source_id": "epoch-ai-datacenters",
+    "name": "Epoch AI Data Center Clusters",
+    "category": "public-tech",
+    "canonical_url": "https://epoch.ai",
+    "license": "third-party terms",
+    "cadence": "monthly",
+    "owner": "NexusWatch Data Engineering",
+    "sensitivity": "public",
+    "parser": "csv_or_manual_ingest",
+    "freshness_sla": "P0 <= 30d",
+    "validation_rules": [
+      "required_fields:cluster_name,lat,lon,power_estimate",
+      "lat_lon_range"
+    ],
+    "confidence_model": "base_source_score*0.30 + recency_score*0.20 + schema_validity*0.15 + cross_source_agreement*0.35",
+    "priority_tier": "P0",
+    "legal_notes": "Flag as estimated where values are modeled, not operator-confirmed."
+  },
+  {
+    "source_id": "wna-trackers",
+    "name": "World Nuclear Association Program + Fuel Cycle Trackers",
+    "category": "public-industry",
+    "canonical_url": "https://world-nuclear.org",
+    "license": "WNA terms",
+    "cadence": "weekly",
+    "owner": "NexusWatch Data Engineering",
+    "sensitivity": "public",
+    "parser": "html_extract",
+    "freshness_sla": "P0 <= 7d",
+    "validation_rules": [
+      "required_fields:program_name,country,status",
+      "status_enum"
+    ],
+    "confidence_model": "base_source_score*0.35 + recency_score*0.20 + schema_validity*0.20 + cross_source_agreement*0.25",
+    "priority_tier": "P0",
+    "legal_notes": "Use as industry context; require official corroboration for decisions."
+  },
+  {
+    "source_id": "nrel-iea-industrial-heat",
+    "name": "NREL/IEA Industrial Heat Datasets",
+    "category": "public-industry",
+    "canonical_url": "https://www.nrel.gov/industrial/",
+    "license": "US government + IEA terms",
+    "cadence": "quarterly",
+    "owner": "NexusWatch Data Engineering",
+    "sensitivity": "public",
+    "parser": "csv_ingest",
+    "freshness_sla": "P0 <= 90d",
+    "validation_rules": [
+      "required_fields:sector,location,heat_demand_band",
+      "heat_demand_non_negative"
+    ],
+    "confidence_model": "base_source_score*0.40 + recency_score*0.15 + schema_validity*0.20 + cross_source_agreement*0.25",
+    "priority_tier": "P0",
+    "legal_notes": "Attach method notes where heat demand values are modeled."
+  },
+  {
+    "source_id": "internal-reactor-specs",
+    "name": "Internal Reactor Specs",
+    "category": "internal-document",
+    "canonical_url": "file://data/nexuswatch/internal-intake/reactor-specs/",
+    "license": "internal-proprietary",
+    "cadence": "on_upload",
+    "owner": "Nuclear Engineering Team",
+    "sensitivity": "restricted",
+    "parser": "pdf_docx_chunker",
+    "freshness_sla": "P0 <= 24h after upload",
+    "validation_rules": [
+      "manifest_required",
+      "checksum_required",
+      "access_control_verified"
+    ],
+    "confidence_model": "document_signature_valid*0.35 + author_trust*0.25 + schema_validity*0.20 + corroboration_score*0.20",
+    "priority_tier": "P0",
+    "legal_notes": "Restricted; citation URLs should point to internal provenance IDs only."
+  },
+  {
+    "source_id": "internal-safety-analyses",
+    "name": "Internal Safety Analyses",
+    "category": "internal-document",
+    "canonical_url": "file://data/nexuswatch/internal-intake/safety-analyses/",
+    "license": "internal-proprietary",
+    "cadence": "on_upload",
+    "owner": "Safety and Licensing Team",
+    "sensitivity": "restricted",
+    "parser": "pdf_docx_chunker",
+    "freshness_sla": "P0 <= 24h after upload",
+    "validation_rules": [
+      "manifest_required",
+      "checksum_required",
+      "redaction_check"
+    ],
+    "confidence_model": "document_signature_valid*0.35 + author_trust*0.25 + schema_validity*0.20 + corroboration_score*0.20",
+    "priority_tier": "P0",
+    "legal_notes": "No raw excerpts outside authorized tenant scope."
+  },
+  {
+    "source_id": "internal-regulatory-strategy",
+    "name": "Internal Regulatory Strategy Docs",
+    "category": "internal-document",
+    "canonical_url": "file://data/nexuswatch/internal-intake/regulatory-strategy/",
+    "license": "internal-proprietary",
+    "cadence": "on_upload",
+    "owner": "Regulatory Affairs",
+    "sensitivity": "confidential",
+    "parser": "pdf_docx_chunker",
+    "freshness_sla": "P0 <= 24h after upload",
+    "validation_rules": [
+      "manifest_required",
+      "checksum_required",
+      "classification_label_present"
+    ],
+    "confidence_model": "document_signature_valid*0.35 + author_trust*0.25 + schema_validity*0.20 + corroboration_score*0.20",
+    "priority_tier": "P0",
+    "legal_notes": "Mark attorney-client privileged content as excluded from LLM contexts unless approved."
+  },
+  {
+    "source_id": "internal-site-feasibility",
+    "name": "Internal Site Feasibility Docs",
+    "category": "internal-document",
+    "canonical_url": "file://data/nexuswatch/internal-intake/site-feasibility/",
+    "license": "internal-proprietary",
+    "cadence": "on_upload",
+    "owner": "Project Development",
+    "sensitivity": "confidential",
+    "parser": "pdf_docx_chunker",
+    "freshness_sla": "P0 <= 24h after upload",
+    "validation_rules": [
+      "manifest_required",
+      "checksum_required",
+      "coordinate_sanity_check"
+    ],
+    "confidence_model": "document_signature_valid*0.35 + author_trust*0.25 + schema_validity*0.20 + corroboration_score*0.20",
+    "priority_tier": "P0",
+    "legal_notes": "Include geospatial CRS metadata for all map-bound artifacts."
+  }
+]
